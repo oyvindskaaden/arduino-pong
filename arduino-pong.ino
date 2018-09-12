@@ -1,12 +1,11 @@
 #include <Wire.h>                  // This library allows you to communicate with I2C
 #include <Adafruit_GFX.h>          // Adafruit GFX graphics core library
-#include <Adafruit_SSD1306.h>      // Driver library for 'monochrome' 128x64 and 128x32 OLEDs
+#include <Adafruit_SSD1306.h>      // Driver library for 'monochrome' 128x32 and 128x32 OLEDs
 
 
 // Define the PINS you're goint to use on your Arduino Nano
-int controller1 = 2;               // ANALOG 2
-int controller2 = 3;               // ANALOG 3
-int ledPin = 4;                    // DIGITAL 4
+int controller1 = A2;               // ANALOG 2
+int controller2 = A3;               // ANALOG 3
 int btnPin = 5;                    // DIGITAL 5
 
 // Define variables
@@ -23,7 +22,7 @@ int scorePlayer1 = 0;
 int scorePlayer2 = 0;
 
 int ballX = 128/2;      
-int ballY = 64/2;
+int ballY = 32/2;
 int ballSpeedX = 2;
 int ballSpeedY = 1;
 
@@ -31,21 +30,18 @@ int ballSpeedY = 1;
 
 Adafruit_SSD1306 display(OLED_RESET);
     
-#if (SSD1306_LCDHEIGHT != 64)
+#if (SSD1306_LCDHEIGHT != 32)
   #error("Height incorrect, please fix Adafruit_SSD1306.h!");
 #endif
 
 
 
 void setup() {
-  pinMode(ledPin, OUTPUT);
   pinMode(btnPin, INPUT);
   
   Serial.begin(9600);
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 128x64)
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 128x32)
   display.clearDisplay();
-
-  digitalWrite(ledPin, HIGH);                 // Status led on...
 }
 
 void loop() {
@@ -54,8 +50,8 @@ void loop() {
   controllerValue1 = analogRead(controller1);
   controllerValue2 = analogRead(controller2);
 
-  paddlePositionPlayer1 = controllerValue1 * (46.0 / 1023.0);
-  paddlePositionPlayer2 = controllerValue2 * (46.0 / 1023.0);
+  paddlePositionPlayer1 = controllerValue1 * (23.0 / 1023.0);
+  paddlePositionPlayer2 = controllerValue2 * (23.0 / 1023.0);
 
   // Set button state
   buttonState = digitalRead(btnPin);
@@ -68,18 +64,18 @@ void loop() {
       scorePlayer1 = 0;
       scorePlayer2 = 0;
       ballX = 128/2;
-      ballY = 64/2;
+      ballY = 32/2;
       delay(100);
   }
   
   if (gameState == 0) {
     display.setTextSize(2);
     display.setTextColor(WHITE);
-    display.setCursor(40, 18);
+    display.setCursor(40, 4);
     display.println("PONG");
     display.setTextSize(1);
     display.setTextColor(WHITE);
-    display.setCursor(32, 38);
+    display.setCursor(32, 18);
     display.println("press start");
     display.display();
     display.clearDisplay();      
@@ -101,10 +97,10 @@ void loop() {
     display.setTextSize(1);
     display.setTextColor(WHITE);
     
-    if (scorePlayer1 == 2) {
-      display.setCursor(15, 30);
-    } else if (scorePlayer2 == 2) {
-      display.setCursor(77, 30);
+    if (scorePlayer1 >= 7 && scorePlayer1 - scorePlayer2 >= 2) {
+      display.setCursor(15, 12);
+    } else if (scorePlayer2 >= 7 && scorePlayer2 - scorePlayer1 >= 2) {
+      display.setCursor(77, 12);
     }
     display.println("winner!");
     display.display();
@@ -113,8 +109,8 @@ void loop() {
 }
 
 void drawField(int score1, int score2) {
-    display.fillRect(0, round(paddlePositionPlayer1), 2, 18, 1);
-    display.fillRect(126, round(paddlePositionPlayer2), 2, 18, 1);
+    display.fillRect(0, round(paddlePositionPlayer1), 2, 9, 1);
+    display.fillRect(126, round(paddlePositionPlayer2), 2, 9, 1);
   
     display.setTextSize(1);
     display.setTextColor(WHITE);
@@ -123,17 +119,16 @@ void drawField(int score1, int score2) {
     display.print(":");
     display.print(score2);
 
-    display.fillRect(63, 12, 1, 5, 1);
-    display.fillRect(63, 22, 1, 5, 1);
-    display.fillRect(63, 32, 1, 5, 1);
-    display.fillRect(63, 42, 1, 5, 1);
-    display.fillRect(63, 52, 1, 5, 1);
-    display.fillRect(63, 62, 1, 5, 1);
+    display.fillRect(63, 7, 1, 3, 1);
+    display.fillRect(63, 12, 1, 3, 1);
+    display.fillRect(63, 17, 1, 3, 1);
+    display.fillRect(63, 22, 1, 3, 1);
+    display.fillRect(63, 27, 1, 3, 1);
 }
 
 void collisionControl() {
   //bounce from top and bottom
-  if (ballY >= 64 - 2 || ballY <= 0) {
+  if (ballY >= 32 - 2 || ballY <= 0) {
     ballSpeedY *= -1;
   } 
 
@@ -147,20 +142,20 @@ void collisionControl() {
       scorePlayer2++;
       ballX = 128 / 4 * 3;
     }  
-    if (scorePlayer1 == 2 || scorePlayer2 == 2) {
+    if ((scorePlayer1 >= 7 && scorePlayer1 - scorePlayer2 >= 2) || (scorePlayer2 >= 7 && scorePlayer2 - scorePlayer1 >= 2)) {
       gameState = 2;
     }
   }
 
   //bounce from player1
   if (ballX >= 0 && ballX <= 2 && ballSpeedX < 0) {
-    if (ballY > round(paddlePositionPlayer1) - 2 && ballY < round(paddlePositionPlayer1) + 18) {
+    if (ballY > round(paddlePositionPlayer1) - 2 && ballY < round(paddlePositionPlayer1) + 9) {
       ballSpeedX *= -1;
     }
   }
   //bounce from player2
   if (ballX >= 128-2-2 && ballX <= 128-2 && ballSpeedX > 0) {
-    if (ballY > round(paddlePositionPlayer2) - 2 && ballY < round(paddlePositionPlayer2) + 18) {
+    if (ballY > round(paddlePositionPlayer2) - 2 && ballY < round(paddlePositionPlayer2) + 9) {
       ballSpeedX *= -1;
     }
 
@@ -174,4 +169,3 @@ void drawBall() {
   ballX += ballSpeedX;
   ballY += ballSpeedY;
 }
-
