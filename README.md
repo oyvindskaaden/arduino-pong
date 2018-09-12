@@ -8,13 +8,13 @@ Article on >>[Medium](https://medium.com/@ruction/arduino-pong-i2c-oled-128x64-b
 * https://github.com/adafruit/Adafruit_SSD1306
 
 ## components
+My version does not use a status led. Do the led in the drawing does not need to be there
 
 * Arduino Nano ATmega328
 * OLED 128x64 I2C Display (128x64)
 * 2 Controllers (10k potentiometer)
-* Status-LED
 * Switch
-* 2 resistors: 4,7K Switch, 1K LED
+* 1 resistor: 10K Switch
 
 
 ## breadboard
